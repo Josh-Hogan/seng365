@@ -10,9 +10,9 @@ module.exports = function (app) {
     app.route(app.rootUrl + '/users/logout')
         .post(user.logout);
 
-    app.route(app.rootUrl + '/user/:id')
+    app.route(app.rootUrl + '/users/:userId')
         .get(user.getUser);
 
-    app.route(app.rootUrl + '/user/:id')
+    app.route(app.rootUrl + '/users/:userId')
         .patch(user.updateDetails);
 };
