@@ -9,7 +9,8 @@ const port = process.env.PORT || 4941;
 async function testDbConnection() {
     try {
         await db.createPool();
-        await db.getPool().getConnection();
+        const conn = await db.getPool().getConnection();
+        conn.release();
     } catch (err) {
         console.error(`Unable to connect to MySQL: ${err.message}`);
         process.exit(1);

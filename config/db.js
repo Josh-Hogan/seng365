@@ -16,3 +16,10 @@ exports.createPool = async function () {
 exports.getPool = function () {
     return pool;
 };
+
+exports.query = async function (sql) {
+    return await pool.query(sql);
+}
+exports.query = async function (sql, values) {
+    return await pool.query(sql, values);
+}

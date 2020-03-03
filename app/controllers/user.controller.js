@@ -63,9 +63,8 @@ exports.getUser = async function (req, res) {
         const [userId, token] = [req.params.userId, req.headers['x-authorization']];
         let [name, city, country, email] = await user.getUser(userId);
         const tokenUserId = await user.getUserIdFromToken(token);
-        
-        if (userId != tokenUserId)
-        {
+
+        if (userId != tokenUserId) {
             email = undefined; //blank email if we are not authorized
         }
 
@@ -92,9 +91,27 @@ exports.getUser = async function (req, res) {
 
 exports.updateDetails = async function (req, res) {
     try {
-        await user.updateDetails();
-        res.statusMessage = "OK";
-        res.status(200).send();
+        const [userId, token] = [req.params.userId, req.headers['x-authorization']];
+        const tokenUserId = await user.getUserIdFromToken(token);
+        if (tokenUserId == null) {
+            res.statusMessage = "Unauthorized";
+            res.status(401).send();
+        } else if (tokenUserId != userId) {
+            res.statusMessage = "Forbidden";
+            res.status(403).send();
+        } else {
+            const [name, email, password, currentPassword, city, country] =
+                [req.body.name, req.body.email, req.body.password, req.body.currentPassword, req.body.city, req.body.country];
+
+            if (await user.updateDetails(userId, name, email, password, currentPassword, city, country)) {
+                res.statusMessage = "OK";
+                res.status(200).send();
+            }
+            else {
+                res.statusMessage = "Bad Request";
+                res.status(400).send();
+            }
+        }
     } catch (err) {
         console.log(err);
         res.statusMessage = "Internal Server Error";
