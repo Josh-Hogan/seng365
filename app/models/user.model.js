@@ -17,7 +17,7 @@ function genAuthToken() {
     return base64url(crypto.randomBytes(tokenSize));
 }
 
-async function updateUserDetailsById(userId, columnName, value) {
+exports.updateUserDetailsById = async function (userId, columnName, value) {
     if (value == null || columnName == null)
         return null;
 
@@ -38,7 +38,7 @@ exports.login = async function (email, password) {
 
     const userId = rows[0].user_id;
     const token = genAuthToken();
-    await updateUserDetailsById(userId, 'auth_token', token);
+    await exports.updateUserDetailsById(userId, 'auth_token', token);
 
     return [userId, token];
 }
@@ -75,12 +75,12 @@ exports.logout = async function (userId) {
     return;
 }
 exports.getUser = async function (userId) {
-    const q = 'SELECT name, city, country, email FROM User WHERE user_id = ?'
+    const q = 'SELECT name, city, country, email, photo_filename FROM User WHERE user_id = ?'
     const [rows, _] = await db.query(q, [userId]);
     if (rows.length == 0)
-        return [null, null, null, null];
+        return [null, null, null, null, null];
 
-    return [rows[0].name, rows[0].city, rows[0].country, rows[0].email];
+    return [rows[0].name, rows[0].city, rows[0].country, rows[0].email, rows[0].photo_filename];
 }
 
 exports.updateDetails = async function (userId, name, email, password, currentPassword, city, country) {
@@ -112,7 +112,7 @@ exports.updateDetails = async function (userId, name, email, password, currentPa
     ["email", email],
     ["password", password],
     ["city", city],
-    ["country", country]].forEach(element => updateUserDetailsById(userId, element[0], element[1]));
+    ["country", country]].forEach(element => exports.updateUserDetailsById(userId, element[0], element[1]));
     //update each column of the table
 
     //Request was successful

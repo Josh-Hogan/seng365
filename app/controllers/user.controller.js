@@ -61,7 +61,7 @@ exports.logout = async function (req, res) {
 exports.getUser = async function (req, res) {
     try {
         const [userId, token] = [req.params.userId, req.headers['x-authorization']];
-        let [name, city, country, email] = await user.getUser(userId);
+        let [name, city, country, email, photoFilename] = await user.getUser(userId);
         const tokenUserId = await user.getUserIdFromToken(token);
 
         if (userId != tokenUserId) {
