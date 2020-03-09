@@ -1,22 +1,19 @@
 const db = require('../../config/db');
-const user = require('./user.model');
 const fs = require('fs');
 const path = require('path');
 
-exports.setPhoto = async function (userId, photoFilename, photoData, contentType) {
-    if (photoFilename == null) {
-        photoFilename = 'user_' + userId + '.';
-        switch (contentType) {
-            case 'image/jpeg': photoFilename += 'jpg'; break;
-            case 'image/png': photoFilename += 'png'; break;
-            case 'image/gif': photoFilename += 'gif'; break;
-            default: throw ("Image file invalid - shouldn't happen");
-        }
-        user.updateUserDetailsById(userId, 'photo_filename', photoFilename);
-    }
-    fs.writeFileSync(path.resolve('storage/photos/' + photoFilename), photoData);
+exports.writePhoto = async function (photoFilename, photoData) {
+    fs.writeFileSync(exports.getPhotoPathFromFilename(photoFilename), photoData);
 }
-exports.clearPhoto = async function () {
-    const q = '';
-    //await db.query(q);
+exports.deletePhoto = async function (photoFilename) {
+    fs.unlinkSync(exports.getPhotoPathFromFilename(photoFilename));
+}
+exports.getPhotoPathFromFilename = function (filename) {
+    return path.resolve(path.resolve('storage/photos') + '/' + filename);
+}
+
+exports.setPhotoFilename = async function (userId, filename) {
+    const q = 'UPDATE User SET `photo_filename` = ? WHERE `user_id` = ?';
+    const values = [filename, userId];
+    return await db.query(q, values);
 }
