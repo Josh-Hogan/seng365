@@ -1,7 +1,5 @@
-const photo = require('../models/user.photo.model');
+const photo = require('../models/photo.model');
 const user = require('../models/user.model');
-const path = require('path');
-const fs = require('fs');
 
 exports.retrievePhoto = async function (req, res) {
     try {
@@ -13,7 +11,7 @@ exports.retrievePhoto = async function (req, res) {
         }
         else {
             res.statusMessage = "OK";
-            res.status(200).sendFile(photo.getPhotoPathFromFilename(photoFilename));
+            res.status(200).sendFile(photo.getPathFromFilename(photoFilename));
         }
     } catch (err) {
         console.log(err);
@@ -48,14 +46,9 @@ exports.setPhoto = async function (req, res) {
                 await photo.deletePhoto(photoFilename);
             }
 
-            photoFilename = 'user_' + userId + '.';
-            switch (contentType) {
-                case 'image/jpeg': photoFilename += 'jpg'; break;
-                case 'image/png': photoFilename += 'png'; break;
-                case 'image/gif': photoFilename += 'gif'; break;
-                default: throw ("Image file invalid - should be caught by above else if");
-            }
-            await photo.setPhotoFilename(userId, photoFilename);
+            photoFilename = 'user_' + userId + '.' + photo.getExtensionFromContentType(contentType);
+           
+            await photo.setUserPhotoFilename(userId, photoFilename);
             await photo.writePhoto(photoFilename, req.body);
             if (createdPhoto) {
                 res.statusMessage = "Created";
@@ -90,7 +83,7 @@ exports.clearPhoto = async function (req, res) {
             res.status(403).send();
         } else {
             await photo.deletePhoto(photoFilename);
-            await photo.setPhotoFilename(userId, null);
+            await photo.setUserPhotoFilename(userId, null);
 
             res.statusMessage = "OK";
             res.status(200).send();

@@ -1,6 +1,5 @@
 const signature = require('../models/petition.signature.model');
 const user = require('../models/user.model');
-const petitions = require('../models/petition.model');
 
 exports.listAll = async function (req, res) {
     try {
