@@ -42,7 +42,7 @@ exports.login = async function (req, res) {
 
 exports.logout = async function (req, res) {
     try {
-        const token = req.headers['x-authorization']
+        const token = req.headers['x-authorization'];
         const tokenUserId = await user.getUserIdFromToken(token);
         if (tokenUserId != null) {
             await user.logout(tokenUserId);

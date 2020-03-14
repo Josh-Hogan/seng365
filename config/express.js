@@ -30,7 +30,8 @@ module.exports = function () {
     require('../app/routes/user.routes')(app);
     require('../app/routes/user.photo.routes')(app);
     require('../app/routes/petition.routes')(app);
-
+    require('../app/routes/petition.signature.routes')(app);
+    require('../app/routes/petition.photo.routes')(app);
 
     return app;
 };
