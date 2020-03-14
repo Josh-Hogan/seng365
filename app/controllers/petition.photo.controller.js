@@ -46,7 +46,7 @@ exports.setPhoto = async function (req, res) {
                 await photo.deletePhoto(photoFilename);
             }
 
-            photoFilename = 'petition_' + petition + '.' + photo.getExtensionFromContentType(contentType);
+            photoFilename = 'petition_' + petitionId + '.' + photo.getExtensionFromContentType(contentType);
 
             await photo.setPetitionPhotoFilename(petitionId, photoFilename);
             await photo.writePhoto(photoFilename, req.body);
