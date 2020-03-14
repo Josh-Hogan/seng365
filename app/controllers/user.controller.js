@@ -2,6 +2,7 @@ const user = require('../models/user.model');
 
 exports.register = async function (req, res) {
     try {
+        //need to check email is not in use
         const [name, email, password, city, country] = [req.body.name, req.body.email, req.body.password, req.body.city, req.body.country];
 
         if (email != null && email.includes('@') && password != null && name != null) {

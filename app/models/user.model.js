@@ -84,25 +84,33 @@ exports.getUser = async function (userId) {
 }
 
 exports.updateDetails = async function (userId, name, email, password, currentPassword, city, country) {
-    if ((email != null && email.includes('@') == false) || password == null)
+    if ((email != null && email.includes('@') == false) ||                          //email is provided and it doesn't include an 'at' sign
+        (currentPassword != null && (password == null || password.length == 0)))    //current password is provided but password is null or empty length
         return false; //bad request
 
-    if (currentPassword == null)
-        currentPassword = password; //password is not changing
+    let rows = [], _ = [];
 
-    const q = 'SELECT * FROM User WHERE `user_id` = ? AND `password` = ?';
-    const [rows, _] = await db.query(q, [userId, currentPassword]);
+    if (password != null)
+    {
+        const q = 'SELECT * FROM User WHERE `user_id` = ? AND `password` = ?';
+        [rows, _] = await db.query(q, [userId, currentPassword]);
+    } 
+    else
+    {
+        const q = 'SELECT * FROM User WHERE `user_id` = ?';
+        [rows, _] = await db.query(q, [userId]);
+    }
     if (rows.length == 0)
-        return false; //password does not match one in database
+        return false; //password does not match one in database or other error
 
     if ((rows[0].name == name || name == null) &&
         (rows[0].email == email || email == null) &&
-        (rows[0].password == password) &&
+        (rows[0].password == password || password == null) &&
         (rows[0].city == city || city == null) &&
         (rows[0].country == country || country == null))
         return false; //nothing is changed
 
-    
+
     const q2 = 'SELECT * FROM User WHERE `email` = ? AND NOT `user_id` = ?';
     const [rows2, _2] = await db.query(q2, [email, userId]);
     if (rows2.length > 0)
