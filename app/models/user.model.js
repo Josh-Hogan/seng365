@@ -1,10 +1,24 @@
 const db = require('../../config/db');
 const crypto = require('crypto');
 const base64url = require('base64url');
+const passwordHash = require('password-hash');
+
+exports.hashPassword = async function (password) {
+    return passwordHash.generate(password);
+}
+
+exports.verifyPassword = async function (password, hash) {
+    if (password == null || hash == null)
+        return null;
+    else
+        return passwordHash.verify(password, hash);
+}
+
 
 exports.register = async function (name, email, password, city, country) {
     if (city == undefined) city = null;
     if (country == undefined) country = null;
+    password = await exports.hashPassword(password); //hash the password
 
     const q = 'INSERT INTO User (name,email,password,city,country) VALUES (?,?,?,?,?)';
     const values = [name, email, password, city, country];
@@ -30,10 +44,15 @@ exports.login = async function (email, password) {
     if (email == null || password == null)
         return [null, null];
 
-    const q = 'SELECT `user_id` FROM User WHERE `email` = ? AND `password` = ?';
-    const values = [email, password];
+    const q = 'SELECT user_id,password FROM User WHERE `email` = ?';
+    const values = [email];
     const [rows, _] = await db.query(q, values);
+
     if (rows.length == 0)
+        return [null, null];
+
+    const passwordValid = await exports.verifyPassword(password, rows[0].password);
+    if (passwordValid == false)
         return [null, null];
 
     const userId = rows[0].user_id;
@@ -88,40 +107,42 @@ exports.updateDetails = async function (userId, name, email, password, currentPa
         (currentPassword != null && (password == null || password.length == 0)))    //current password is provided but password is null or empty length
         return false; //bad request
 
+    if (currentPassword == null) password = null; //ignore the password field if we don't include the current password
+
     let rows = [], _ = [];
 
-    if (password != null)
-    {
-        const q = 'SELECT * FROM User WHERE `user_id` = ? AND `password` = ?';
-        [rows, _] = await db.query(q, [userId, currentPassword]);
-    } 
-    else
-    {
-        const q = 'SELECT * FROM User WHERE `user_id` = ?';
-        [rows, _] = await db.query(q, [userId]);
-    }
+    const q = 'SELECT * FROM User WHERE `user_id` = ?';
+    [rows, _] = await db.query(q, [userId]);
+
     if (rows.length == 0)
         return false; //password does not match one in database or other error
 
+    if (currentPassword != null && exports.verifyPassword(currentPassword, rows[0].password) == false)
+        return false; //current password was provided and doesn't match old one 
+
     if ((rows[0].name == name || name == null) &&
         (rows[0].email == email || email == null) &&
-        (rows[0].password == password || password == null) &&
+        (password == currentPassword || password == null)  &&
         (rows[0].city == city || city == null) &&
         (rows[0].country == country || country == null))
         return false; //nothing is changed
-
 
     const q2 = 'SELECT * FROM User WHERE `email` = ? AND NOT `user_id` = ?';
     const [rows2, _2] = await db.query(q2, [email, userId]);
     if (rows2.length > 0)
         return false; //email is the same as another account
 
+
+    const promises = [];
+
     [["name", name],
     ["email", email],
-    ["password", password],
+    ["password", await exports.hashPassword(password)],
     ["city", city],
-    ["country", country]].forEach(element => exports.updateUserDetailsById(userId, element[0], element[1]));
+    ["country", country]].forEach(element => promises.push(exports.updateUserDetailsById(userId, element[0], element[1])));
+    
     //update each column of the table
+    await Promise.all(promises);
 
     //Request was successful
     return true;
